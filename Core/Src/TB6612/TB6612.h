@@ -39,9 +39,9 @@ typedef struct
 
 void TB6612Init(TB6612_t *TB6612);
 
-void TB6612SetPWMA_Value(TB6612_t *TB6612, uint16_t value);
+void TB6612SetPWMA_Value(TB6612_t *TB6612, int16_t value);
 
-void TB6612SetPWMB_Value(TB6612_t *TB6612, uint16_t value);
+void TB6612SetPWMB_Value(TB6612_t *TB6612, int16_t value);
 
 void TB6612Brake(TB6612_t *TB6612);
 

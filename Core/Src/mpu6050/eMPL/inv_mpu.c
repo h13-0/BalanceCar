@@ -157,8 +157,6 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 /* #warning "No compass = less profit for Invensense. Lame." */
 #endif
 
-static int set_int_enable(unsigned char enable);
-
 typedef enum
 {
 	I2C_OK = 0,
@@ -697,7 +695,7 @@ static int setup_compass(void);
  *  @param[in]  enable      1 to enable interrupt.
  *  @return     0 if successful.
  */
-static int set_int_enable(unsigned char enable)
+int set_int_enable(unsigned char enable)
 {
     unsigned char tmp;
 
@@ -2911,7 +2909,7 @@ unsigned short inv_orientation_matrix_to_scalar(
 /**Platform I2C Realize**/
 static I2C_TypeDef *i2cport = NULL;
 
-#define errorTimeLimit 1000
+#define errorTimeLimit 5000
 #define wait(logicalExpression, returnCode) { uint16_t errorTimes = 0; while(logicalExpression){ errorTimes ++; if(errorTimes > errorTimeLimit){ return returnCode; }}}
 
 static I2C_Error_t mpuWriteLen(uint8_t address, uint8_t reg, uint8_t len, uint8_t *buf)
@@ -2992,10 +2990,10 @@ static I2C_Error_t mpuReadLen(uint8_t address, uint8_t reg, uint8_t len, uint8_t
 }
 
 /**Simplified APIs**/
-//q30, long转float时的除数
+//q30, long
 #define q30  1073741824.0f
 
-//陀螺仪方向设置
+//
 static signed char gyro_orientation[9] = { 1, 0, 0,
                                            0, 1, 0,
                                            0, 0, 1 };
@@ -3019,7 +3017,7 @@ uint8_t run_self_test(void)
 		gyro[2] = (long)(gyro[2] * sens);
 		dmp_set_gyro_bias(gyro);
 		mpu_get_accel_sens(&accel_sens);
-		accel_sens = 0;                       //ǿ�ƻ�׼ˮƽ��
+		accel_sens = 0;                       //
 		accel[0] *= accel_sens;
 		accel[1] *= accel_sens;
 		accel[2] *= accel_sens;
@@ -3081,7 +3079,7 @@ MPU_Error_t MPU_DMP_GetEularAngle(float *pitch, float *roll, float *yaw)
 		q1 = quat[1] / q30;
 		q2 = quat[2] / q30;
 		q3 = quat[3] / q30; 
-		//四元数解算
+		//
 		*pitch = asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3;	// pitch
 		*roll  = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3;	// roll
 		*yaw   = atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;	//yaw

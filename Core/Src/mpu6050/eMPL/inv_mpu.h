@@ -69,6 +69,7 @@ int mpu_set_bypass(unsigned char bypass_on);
 int mpu_lp_accel_mode(unsigned char rate);
 int mpu_lp_motion_interrupt(unsigned short thresh, unsigned char time,
     unsigned char lpa_freq);
+int set_int_enable(unsigned char enable);
 int mpu_set_int_level(unsigned char active_low);
 int mpu_set_int_latched(unsigned char enable);
 
@@ -135,17 +136,17 @@ int mpu_register_tap_cb(void (*func)(unsigned char, unsigned char));
 typedef enum
 {
 	MPU_OK = 0,
-	MPU_Init_Error,
-	MPU_I2C_Error,
-	MPU_ConfigureError,
-	MPU_SetSampleRateError,
-	MPU_LoadDMP_Error,
-	MPU_SetFifoError,
-	MPU_SelfTestError,
-	MPU_AccessTooFast,
-	MPU_GyroscopeNotEnabled,
-	MPU_AccelerometerNotEnabled,
-	MPU_TemperatureSensorNotEnabled,
+	MPU_Init_Error = 1,
+	MPU_I2C_Error = 2,
+	MPU_ConfigureError = 3,
+	MPU_SetSampleRateError = 4,
+	MPU_LoadDMP_Error = 5,
+	MPU_SetFifoError = 6,
+	MPU_SelfTestError = 7,
+	MPU_AccessTooFast = 8,
+	MPU_GyroscopeNotEnabled = 9,
+	MPU_AccelerometerNotEnabled = 10,
+	MPU_TemperatureSensorNotEnabled = 11,
 } MPU_Error_t;
 
 MPU_Error_t MPU_DMP_Init(I2C_TypeDef *port, uint16_t frequency);

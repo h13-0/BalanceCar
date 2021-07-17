@@ -26,7 +26,7 @@ void TB6612Init(TB6612_t *TB6612)
 	LL_GPIO_ResetOutputPin(TB6612 -> BIN2Port, TB6612 -> BIN2Pin);
 }
 
-void TB6612SetPWMA_Value(TB6612_t *TB6612, uint16_t value)
+void TB6612SetPWMA_Value(TB6612_t *TB6612, int16_t value)
 {
 	uint16_t finalValue = 0;
 
@@ -75,7 +75,7 @@ void TB6612SetPWMA_Value(TB6612_t *TB6612, uint16_t value)
 	return;
 }
 
-void TB6612SetPWMB_Value(TB6612_t *TB6612, uint16_t value)
+void TB6612SetPWMB_Value(TB6612_t *TB6612, int16_t value)
 {
 	uint16_t finalValue = 0;
 
