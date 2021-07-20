@@ -24,7 +24,7 @@
 #include "dmpKey.h"
 #include "dmpmap.h"
 
-//ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MSP430
+//¶¨ÒåÄ¿±ê°å²ÉÓÃMSP430
 #define  MOTION_DRIVER_TARGET_MSP430
 
 /* The following functions must be defined for this platform:
@@ -39,9 +39,9 @@
 //#include "msp430.h"
 //#include "msp430_clock.h"
 #define delay_ms    HAL_Delay
-#define get_ms(var) {}
 #define log_i 		printf
 #define log_e  		printf
+#define get_ms(var) {}
 
 #elif defined EMPL_TARGET_MSP430
 #include "msp430.h"

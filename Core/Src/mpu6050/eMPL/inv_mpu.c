@@ -22,17 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <stddef.h>
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
-
 #include "Clock.h"
 
-#define MPU6050
+#define MPU6050							//¶¨ÒåÎÒÃÇÊ¹ÓÃµÄ´«¸ÐÆ÷ÎªMPU6050
+#define MOTION_DRIVER_TARGET_MSP430		//¶¨ÒåÇý¶¯²¿·Ö,²ÉÓÃMSP430µÄÇý¶¯(ÒÆÖ²µ½STM32F1)
 
-//
-#define MPU_ADDR				(0X68)
-#define MOTION_DRIVER_TARGET_MSP430		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½MSP430ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½Ö²ï¿½ï¿½STM32F1)
+#define I2C_RETRY   3
+#define I2C_TIMEOUT 1000
 
 /* The following functions must be defined for this platform:
  * i2c_write(unsigned char slave_addr, unsigned char reg_addr,
@@ -55,14 +53,14 @@
 #define i2c_write   mpuWriteLen
 #define i2c_read    mpuReadLen
 #define delay_ms    SleepMillisecond
-#define get_ms(var) {}
+#define get_ms(var)      {}
 //static inline int reg_int_cb(struct int_param_s *int_param)
 //{
 //    return msp430_reg_int_cb(int_param->cb, int_param->pin, int_param->lp_exit,
 //        int_param->active_low);
 //}
-#define log_i 	printf	//ï¿½ï¿½Ó¡ï¿½ï¿½Ï¢
-#define log_e  	printf	//ï¿½ï¿½Ó¡ï¿½ï¿½Ï¢
+#define log_i(...)  {}//´òÓ¡ÐÅÏ¢
+#define log_e(...)  {}//´òÓ¡ÐÅÏ¢
 /* labs is already defined by TI's toolchain. */
 /* fabs is for doubles. fabsf is for floats. */
 #define fabs        fabsf
@@ -534,7 +532,7 @@ const struct gyro_reg_s reg = {
 };
 
 //const struct hw_s hw = {
-//    .addr           = MPU_ADDR,
+//    .addr           = 0x68,
 //    .max_fifo       = 1024,
 //    .num_reg        = 118,
 //    .temp_sens      = 340,
@@ -545,7 +543,7 @@ const struct gyro_reg_s reg = {
 //#endif
 //};
 const struct hw_s hw={
-  MPU_ADDR,	 //addr
+  0x68,	 //addr
   1024,	 //max_fifo
   118,	 //num_reg
   340,	 //temp_sens
@@ -2888,7 +2886,7 @@ unsigned short inv_row_2_scale(const signed char *row)
 unsigned short inv_orientation_matrix_to_scalar(
     const signed char *mtx)
 {
-    unsigned short scalar; 
+    unsigned short scalar;
     /*
        XYZ  010_001_000 Identity Matrix
        XZY  001_010_000
@@ -2906,94 +2904,44 @@ unsigned short inv_orientation_matrix_to_scalar(
     return scalar;
 }
 
-/**Platform I2C Realize**/
-static I2C_TypeDef *i2cport = NULL;
 
-#define errorTimeLimit 5000
-#define wait(logicalExpression, returnCode) { uint16_t errorTimes = 0; while(logicalExpression){ errorTimes ++; if(errorTimes > errorTimeLimit){ return returnCode; }}}
+/**Platform I2C Realize**/
+static I2C_HandleTypeDef *i2cport = NULL;
 
 static I2C_Error_t mpuWriteLen(uint8_t address, uint8_t reg, uint8_t len, uint8_t *buf)
 {
-	//Wait
-	wait(LL_I2C_IsActiveFlag_BUSY(i2cport) == SET, I2C_Busy);
-
-	//Start
-	LL_I2C_GenerateStartCondition(i2cport);
-	wait(LL_I2C_IsActiveFlag_SB(i2cport) == RESET, I2C_HardwareFault);
-
-	//Address
-	LL_I2C_TransmitData8(i2cport, address * 2);
-	wait(LL_I2C_IsActiveFlag_ADDR(i2cport) == RESET, I2C_SlaveNotFound);
-
-	LL_I2C_ClearFlag_ADDR(i2cport);
-
-	//Reg
-	LL_I2C_TransmitData8(i2cport, reg);
-	wait(LL_I2C_IsActiveFlag_TXE(i2cport) == RESET, I2C_TransmissionTimeout);
-
-	//data
-	for (uint8_t i = 0; i < len; i++) {
-		LL_I2C_TransmitData8(i2cport, buf[i]);
-		wait(LL_I2C_IsActiveFlag_TXE(i2cport) == RESET, I2C_TransmissionTimeout);
+	if (HAL_I2C_IsDeviceReady(i2cport, address * 2, I2C_RETRY, I2C_TIMEOUT) == HAL_OK)
+	{
+		if (HAL_I2C_Mem_Write(i2cport, address * 2, reg, I2C_MEMADD_SIZE_8BIT, buf, len, I2C_TIMEOUT) == HAL_OK)
+		{
+			return I2C_OK;
+		} else {
+			return I2C_TransmissionTimeout;
+		}
+	} else {
+		return I2C_Busy;
 	}
-
-	LL_I2C_GenerateStopCondition(i2cport);
-	return I2C_OK;
 }
 
 static I2C_Error_t mpuReadLen(uint8_t address, uint8_t reg, uint8_t len, uint8_t *buf)
 {
-	//Wait
-	wait(LL_I2C_IsActiveFlag_BUSY(i2cport) == SET, I2C_Busy);
-
-	//Start
-	LL_I2C_GenerateStartCondition(i2cport);
-	wait(LL_I2C_IsActiveFlag_SB(i2cport) == RESET, I2C_HardwareFault);
-
-	//Address
-	LL_I2C_TransmitData8(i2cport, address * 2);
-	wait(LL_I2C_IsActiveFlag_ADDR(i2cport) == RESET, I2C_SlaveNotFound);
-
-	LL_I2C_ClearFlag_ADDR(i2cport);
-
-	//Reg
-	LL_I2C_TransmitData8(i2cport, reg);
-	wait(LL_I2C_IsActiveFlag_TXE(i2cport) == RESET, I2C_TransmissionTimeout);
-
-	//Restart
-	//LL_I2C_GenerateStopCondition(i2cport);
-	//wait(LL_I2C_IsActiveFlag_SB(i2cport) == SET, I2C_HardwareFault);
-	LL_I2C_GenerateStartCondition(i2cport);
-	wait(LL_I2C_IsActiveFlag_SB(i2cport) == RESET, I2C_HardwareFault);
-
-	//Address
-	LL_I2C_TransmitData8(i2cport, address * 2 + 1);
-	wait(LL_I2C_IsActiveFlag_ADDR(i2cport) == RESET, I2C_SlaveNotFound);
-
-	LL_I2C_ClearFlag_ADDR(i2cport);
-
-	//Read
-	for (uint8_t i = len; i > 0; i--) {
-		if (i == 1) {
-			LL_I2C_GenerateStopCondition(i2cport);
-			LL_I2C_AcknowledgeNextData(i2cport, LL_I2C_NACK);
+	if (HAL_I2C_IsDeviceReady(i2cport, (address * 2) + 1, I2C_RETRY, I2C_TIMEOUT) == HAL_OK) {
+		if (HAL_I2C_Mem_Read(i2cport, (address * 2) + 1, reg, I2C_MEMADD_SIZE_8BIT, buf, len, I2C_TIMEOUT) == HAL_OK)
+		{
+			return I2C_OK;
 		} else {
-			LL_I2C_AcknowledgeNextData(i2cport, LL_I2C_ACK);
+			return I2C_TransmissionTimeout;
 		}
-
-		wait(LL_I2C_IsActiveFlag_RXNE(i2cport) == RESET, I2C_TransmissionTimeout);
-
-		*buf = LL_I2C_ReceiveData8(i2cport);
-		buf++;
+	} else {
+		return I2C_Busy;
 	}
-	return I2C_OK;
 }
 
 /**Simplified APIs**/
-//q30, long
+//q30, long×ªfloatÊ±µÄ³ýÊý
 #define q30  1073741824.0f
 
-//
+//ÍÓÂÝÒÇ·½ÏòÉèÖÃ
 static signed char gyro_orientation[9] = { 1, 0, 0,
                                            0, 1, 0,
                                            0, 0, 1 };
@@ -3017,7 +2965,7 @@ uint8_t run_self_test(void)
 		gyro[2] = (long)(gyro[2] * sens);
 		dmp_set_gyro_bias(gyro);
 		mpu_get_accel_sens(&accel_sens);
-		accel_sens = 0;                       //
+		accel_sens = 0;
 		accel[0] *= accel_sens;
 		accel[1] *= accel_sens;
 		accel[2] *= accel_sens;
@@ -3026,7 +2974,7 @@ uint8_t run_self_test(void)
 	}else return 1;
 }
 
-MPU_Error_t MPU_DMP_Init(I2C_TypeDef *port, uint16_t frequency)
+MPU_Error_t MPU_DMP_Init(I2C_HandleTypeDef *port, uint16_t frequency)
 {
 	i2cport = port;
 	if(mpu_init() == 0)
@@ -3079,7 +3027,7 @@ MPU_Error_t MPU_DMP_GetEularAngle(float *pitch, float *roll, float *yaw)
 		q1 = quat[1] / q30;
 		q2 = quat[2] / q30;
 		q3 = quat[3] / q30; 
-		//
+		//ËÄÔªÊý½âËã
 		*pitch = asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3;	// pitch
 		*roll  = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3;	// roll
 		*yaw   = atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;	//yaw
@@ -3136,3 +3084,4 @@ MPU_Error_t MPU_GetTemperature(short *temperature)
 
 	return MPU_OK;
 }
+

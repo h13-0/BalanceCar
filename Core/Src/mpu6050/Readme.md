@@ -1,39 +1,7 @@
-# Usage
-```
-#include "inv_mpu.h"
-#include "Clock.h"
+他DMP库本身就没有支持多个模块同时工作
+并且几乎很难遇到多个模块同时使用的场景, 故本库仅支持单模块使用
 
-int main()
-{
-    MPU_Error_t ret = 0;
-
-	ret = MPU_DMP_Init(I2C2, 100);
-
-	while(ret != MPU_OK)
-	{
-		printf("MPU Init failed with ret: %d\r\n", ret);
-		SleepMillisecond(400);
-		ret = MPU_DMP_Init(I2C2, 100);
-	}
-
-	while(1)
-	{
-		float pitch, roll, yaw;
-		MPU_DMP_GetEularAngle(&pitch, &roll, &yaw);
-		printf("pitch: %f, roll: %f, yaw: %f\r\n", pitch, roll, yaw);
-
-        /*
-        short gx, gy, gz;
-        MPU_GetGyroscope(&gx, &gy, &gz);
-        printf("gx: %d, gy: %d, gz: %d\r\n", gx, gy, gz);
-
-        short ax, ay, az;
-		MPU_GetAccelerometer(&ax, &ay, &az);
-		printf("ax: %d, ay: %d, az: %d\r\n", ax, ay, az);
-        */
-    }
-}
-```
+dmp只能在0x68下正常工作, 因为正点原子没有传宏定义...
 
 # 头文件API表
 

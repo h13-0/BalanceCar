@@ -18,6 +18,8 @@
 
 #include "PIDRealize.h"
 
+extern I2C_HandleTypeDef hi2c1;
+
 int App(void)
 
 {
@@ -28,12 +30,12 @@ int App(void)
 	SetSerialPrintfTarget(USART2);
 	SetJustFloatPort(USART2);
 
-	MPU_Error_t ret = MPU_DMP_Init(I2C2, 100);
+	MPU_Error_t ret = MPU_DMP_Init(&hi2c1, 100);
 	while(ret != MPU_OK)
 	{
 		printf("MPU Init error with code: %d\r\n", ret);
 		SleepMillisecond(400);
-		ret = MPU_DMP_Init(I2C2, 100);
+		ret = MPU_DMP_Init(&hi2c1, 100);
 	}
 
 	PID_Init();
@@ -44,7 +46,6 @@ int App(void)
 		ReportPID_Status();
 		SleepMillisecond(1);
 	}
-
 
 	return 0;
 }

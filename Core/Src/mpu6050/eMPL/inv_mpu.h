@@ -21,7 +21,7 @@
 #ifndef _INV_MPU_H_
 #define _INV_MPU_H_
 
-//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+//¶¨ÒåÊä³öËÙ¶È
 #define DEFAULT_MPU_HZ  (100)		//100Hz
 
 #define INV_X_GYRO      (0x40)
@@ -31,7 +31,7 @@
 #define INV_XYZ_ACCEL   (0x08)
 #define INV_XYZ_COMPASS (0x01)
 
-//ï¿½ï¿½Ö²ï¿½Ù·ï¿½MSP430 DMPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//ÒÆÖ²¹Ù·½MSP430 DMPÇý¶¯¹ýÀ´
 struct int_param_s {
 //#if defined EMPL_TARGET_MSP430 || defined MOTION_DRIVER_TARGET_MSP430
     void (*cb)(void);
@@ -130,7 +130,7 @@ int mpu_register_tap_cb(void (*func)(unsigned char, unsigned char));
 
 /**Simplified APIs**/
 #if defined(STM32F103xB) || defined(STM32F103xC) || defined(STM32F103xD) || defined(STM32F103xE)
-#include "stm32f1xx_ll_i2c.h"
+#include "stm32f1xx_hal.h"
 #endif
 
 typedef enum
@@ -149,7 +149,7 @@ typedef enum
 	MPU_TemperatureSensorNotEnabled = 11,
 } MPU_Error_t;
 
-MPU_Error_t MPU_DMP_Init(I2C_TypeDef *port, uint16_t frequency);
+MPU_Error_t MPU_DMP_Init(I2C_HandleTypeDef *port, uint16_t frequency);
 
 MPU_Error_t MPU_DMP_GetEularAngle(float *pitch, float *roll, float *yaw);
 
