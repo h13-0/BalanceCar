@@ -20,7 +20,9 @@ __attribute__((always_inline)) inline void DebugHandler(uint8_t data)
 {
 	static uint8_t buffer[32] = { '\0' };
 	static uint8_t len = 0;
+#if defined(PIDParallel) || defined(PIDCascade)
 	GeneratePraiseWithSuffixMethod(data, "\r\n", 2, buffer, 32, len, PIDAdjust(buffer, len - 2));
+#endif
 }
 
 #endif

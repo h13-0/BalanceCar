@@ -4,6 +4,7 @@
  *  Created on: 2021, 6, 30.
  *      Author: h13
  */
+#if defined(PIDParallel) || defined(PIDCascade)
 #ifdef DEBUG
 
 #include "PIDAdjust.h"
@@ -27,4 +28,5 @@ void PIDAdjust(uint8_t *data, uint8_t len)
 	MatchKeyFloat(data, len, "SMI:", 4, SpeedPID.maximumAbsValueOfIntegrationOutput);
 }
 
-#endif
+#endif   //DEBUG
+#endif   //defined(PIDParallel) || defined(PIDCascade)

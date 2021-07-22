@@ -2193,9 +2193,9 @@ int mpu_run_self_test(long *gyro, long *accel)
     int ii;
 #endif
     int result;
-    unsigned char accel_fsr, fifo_sensors, sensors_on;
-    unsigned short gyro_fsr, sample_rate, lpf;
-    unsigned char dmp_was_on;
+    unsigned char accel_fsr = 0, fifo_sensors = 0, sensors_on = 0;
+    unsigned short gyro_fsr = 0, sample_rate = 0, lpf = 0;
+    unsigned char dmp_was_on = 0;
 
     if (st.chip_cfg.dmp_on) {
         mpu_set_dmp_state(0);
@@ -2957,8 +2957,8 @@ uint8_t run_self_test(void)
 		/* Test passed. We can trust the gyro data here, so let's push it down
 		* to the DMP.
 		*/
-		float sens;
-		unsigned short accel_sens;
+		float sens = 0;
+		unsigned short accel_sens = 0;
 		mpu_get_gyro_sens(&sens);
 		gyro[0] = (long)(gyro[0] * sens);
 		gyro[1] = (long)(gyro[1] * sens);

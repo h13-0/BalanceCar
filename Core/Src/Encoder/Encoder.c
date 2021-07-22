@@ -27,71 +27,116 @@
 #define _minimumUpdateInterval (10000)
 #define _symbolStableThreshold (5)
 
-__attribute__((always_inline)) inline float GetBipolarEncoderSpeed(BipolarEncoder_t *encoder)
+/**
+ * @brief:  Gets the current disk speed.
+ * @param:
+ * 		SinglePhaseEncoder_t *Encoder
+ * @return:
+ * 		Trigger speed per millisecond.
+ */
+__attribute__((always_inline)) inline float GetSinglePhaseEncoderSpeed(SinglePhaseEncoder_t *Encoder)
 {
-	Time_t timeDifference = GetUS() - encoder -> LastUpdateTime;
-	if(encoder -> SymbolStatus.Symbol == Positive)
+	Time_t timeDifference = GetUS() - Encoder -> LastUpdateTime;
+	if(timeDifference < _minimumUpdateInterval * 3)
+	{
+		return ((1000.0 * (Encoder -> LatestTriggerTimes + Encoder -> TemporaryTriggerTimes)) / (_minimumUpdateInterval + timeDifference));
+	} else {
+		return 1000.0 / (timeDifference);
+	}
+}
+
+/**
+ * @brief: External interrupt to code disk.
+ * @param: SinglePhaseEncoder_t *Encoder.
+ */
+__attribute__((always_inline)) inline void SinglePhaseEncoder_TriggerHandle(SinglePhaseEncoder_t *Encoder)
+{
+	Time_t timeDifference = GetUS() - Encoder -> LastUpdateTime;
+	Encoder -> TemporaryTriggerTimes ++;
+	if(timeDifference - Encoder -> LastUpdateTime > _minimumUpdateInterval)
+	{
+		Encoder -> LastUpdateTime = timeDifference;
+		Encoder -> LatestTriggerTimes = Encoder -> TemporaryTriggerTimes;
+		Encoder -> TemporaryTriggerTimes = 0;
+	}
+}
+
+/**
+ * @brief:  Gets the current disk speed.
+ * @param:
+ * 		DoublePhaseEncoder_t *Encoder
+ * @return:
+ * 		Trigger speed per millisecond.
+ */
+__attribute__((always_inline)) inline float GetDoublePhaseEncoderSpeed(DoublePhaseEncoder_t *Encoder)
+{
+	Time_t timeDifference = GetUS() - Encoder -> LastUpdateTime;
+	if(Encoder -> SymbolStatus.Symbol == Positive)
 	{
 		if(timeDifference < _minimumUpdateInterval * 3)
 		{
-			return ((1000.0 * (encoder -> LatestTriggerTimes + encoder -> TemporaryTriggerTimes)) / (_minimumUpdateInterval + timeDifference));
+			return ((1000.0 * (Encoder -> LatestTriggerTimes + Encoder -> TemporaryTriggerTimes)) / (_minimumUpdateInterval + timeDifference));
 		} else {
 			return 1000.0 / (timeDifference);
 		}
 	} else {
 		if(timeDifference < _minimumUpdateInterval * 3)
 		{
-			return ((-1000.0 * (encoder -> LatestTriggerTimes + encoder -> TemporaryTriggerTimes)) / (_minimumUpdateInterval + timeDifference));
+			return ((-1000.0 * (Encoder -> LatestTriggerTimes + Encoder -> TemporaryTriggerTimes)) / (_minimumUpdateInterval + timeDifference));
 		} else {
 			return - 1000.0 / (timeDifference);
 		}
 	}
 }
 
-__attribute__((always_inline)) inline void BipolarEncoderChannel1_TriggerHandle(BipolarEncoder_t *encoder)
+/**
+ * @brief: External interrupt to code disk.
+ * @param: DoublePhaseEncoder_t *Encoder.
+ */
+__attribute__((always_inline)) inline void DoublePhaseEncoderChannel1_TriggerHandle(DoublePhaseEncoder_t *Encoder)
 {
-	encoder -> LatestChannel1_TriggerTime = GetUS();
-	encoder -> TemporaryTriggerTimes ++;
-	encoder -> C1C2_TriggerTimeGap = encoder -> LatestChannel1_TriggerTime - encoder -> LatestChannel2_TriggerTime;
+	Encoder -> LatestChannel1_TriggerTime = GetUS();
+	Encoder -> TemporaryTriggerTimes ++;
+	Encoder -> C1C2_TriggerTimeGap = Encoder -> LatestChannel1_TriggerTime - Encoder -> LatestChannel2_TriggerTime;
 
-	if(encoder -> LatestChannel1_TriggerTime - encoder -> LastUpdateTime > _minimumUpdateInterval)
+	if(Encoder -> LatestChannel1_TriggerTime - Encoder -> LastUpdateTime > _minimumUpdateInterval)
 	{
-		encoder -> LastUpdateTime = encoder -> LatestChannel1_TriggerTime;
-		encoder -> LatestTriggerTimes = encoder -> TemporaryTriggerTimes;
-		encoder -> TemporaryTriggerTimes = 0;
+		Encoder -> LastUpdateTime = Encoder -> LatestChannel1_TriggerTime;
+		Encoder -> LatestTriggerTimes = Encoder -> TemporaryTriggerTimes;
+		Encoder -> TemporaryTriggerTimes = 0;
 	}
 }
 
-__attribute__((always_inline)) inline void BipolarEncoderChannel2_TriggerHandle(BipolarEncoder_t *encoder)
+__attribute__((always_inline)) inline void DoublePhaseEncoderChannel2_TriggerHandle(DoublePhaseEncoder_t *Encoder)
 {
-	encoder -> LatestChannel2_TriggerTime = GetUS();
-	encoder -> C2C1_TriggerTimeGap = encoder -> LatestChannel2_TriggerTime - encoder -> LatestChannel1_TriggerTime;
+	Encoder -> LatestChannel2_TriggerTime = GetUS();
+	Encoder -> C2C1_TriggerTimeGap = Encoder -> LatestChannel2_TriggerTime - Encoder -> LatestChannel1_TriggerTime;
 
-	if(encoder -> C1C2_TriggerTimeGap > encoder -> C2C1_TriggerTimeGap)
+	if(Encoder -> C1C2_TriggerTimeGap > Encoder -> C2C1_TriggerTimeGap)
 	{
-		if(encoder -> SymbolStatus.Symbol == Positive)
+		if(Encoder -> SymbolStatus.Symbol == Positive)
 		{
-			encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+			Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
 		} else {
-			if(encoder -> SymbolStatus.StableTime > 0)
+			if(Encoder -> SymbolStatus.StableTime > 0)
 			{
-				encoder -> SymbolStatus.StableTime --;
+				Encoder -> SymbolStatus.StableTime --;
 			} else {
-				encoder -> SymbolStatus.Symbol = Positive;
-				encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+				Encoder -> SymbolStatus.Symbol = Positive;
+				Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
 			}
 		}
 	} else {
-		if(encoder -> SymbolStatus.Symbol == Negative)
+		if(Encoder -> SymbolStatus.Symbol == Negative)
 		{
-			encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+			Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
 		} else {
-			if(encoder -> SymbolStatus.StableTime > 0)
+			if(Encoder -> SymbolStatus.StableTime > 0)
 			{
-				encoder -> SymbolStatus.StableTime --;
+				Encoder -> SymbolStatus.StableTime --;
 			} else {
-				encoder -> SymbolStatus.Symbol = Negative;
-				encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+				Encoder -> SymbolStatus.Symbol = Negative;
+				Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
 			}
 		}
 	}

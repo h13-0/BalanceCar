@@ -35,7 +35,42 @@ typedef struct
 } SymbolStatus_t;
 
 /**
- * @brief: Typedef struct for Bipolar encoder.
+ * @brief: Typedef struct for single phase encoder.
+ * @note:
+ * 		Just a variable that stores disk data without manual assignment.
+ * 		When defining, manually define it as 0.
+ * 			Such as:
+ * 				SinglePhaseEncoder_t encoder = { 0 };
+ */
+typedef struct
+{
+	Time_t         LastUpdateTime;
+	uint16_t       LatestTriggerTimes;
+	uint16_t       TemporaryTriggerTimes;
+} SinglePhaseEncoder_t;
+
+/**
+ * @brief:  Gets the current disk speed.
+ * @param:
+ * 		SinglePhaseEncoder_t *Encoder
+ * @return:
+ * 		Trigger speed per millisecond.
+ */
+float GetSinglePhaseEncoderSpeed(SinglePhaseEncoder_t *Encoder);
+
+/**
+ * @brief: External interrupt to code disk.
+ * @param: SinglePhaseEncoder_t *Encoder.
+ */
+void SinglePhaseEncoder_TriggerHandle(SinglePhaseEncoder_t *Encoder);
+
+/**
+ * @brief: Typedef struct for double phase encoder.
+ * @note:
+ * 		Just a variable that stores disk data without manual assignment.
+ * 		When defining, manually define it as 0.
+ * 			Such as:
+ * 				DoublePhaseEncoder_t encoder = { 0 };
  */
 typedef struct
 {
@@ -47,12 +82,23 @@ typedef struct
 	uint16_t       LatestTriggerTimes;
 	uint16_t       TemporaryTriggerTimes;
 	SymbolStatus_t SymbolStatus;
-} BipolarEncoder_t;
+} DoublePhaseEncoder_t;
 
-float GetBipolarEncoderSpeed(BipolarEncoder_t *encoder);
+/**
+ * @brief:  Gets the current disk speed.
+ * @param:
+ * 		DoublePhaseEncoder_t *Encoder
+ * @return:
+ * 		Trigger speed per millisecond.
+ */
+float GetDoublePhaseEncoderSpeed(DoublePhaseEncoder_t *Encoder);
 
-void BipolarEncoderChannel1_TriggerHandle(BipolarEncoder_t *encoder);
+/**
+ * @brief: External interrupt to code disk.
+ * @param: DoublePhaseEncoder_t *Encoder.
+ */
+void DoublePhaseEncoderChannel1_TriggerHandle(DoublePhaseEncoder_t *Encoder);
 
-void BipolarEncoderChannel2_TriggerHandle(BipolarEncoder_t *encoder);
+void DoublePhaseEncoderChannel2_TriggerHandle(DoublePhaseEncoder_t *Encoder);
 
 #endif /* SRC_ENCODER_ENCODER_H_ */

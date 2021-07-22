@@ -1,17 +1,21 @@
+
 /*
  * PIDRealize.c
  *
  *  Created on: 2021,7,2
  *      Author: h13
  */
-#include "PIDRealize.h"
+#ifdef PIDParallel
+
+#include "PIDParallelRealize.h"
+#include <stdlib.h>
+#include "BalanceRealize.h"
 #include "PID.h"
 #include "inv_mpu.h"
 #include "JustFloat.h"
 #include "MotorControl.h"
 #include "Clock.h"
 #include "Encoder.h"
-#include <stdlib.h>
 #include "Filter.h"
 
 #ifdef DEBUG
@@ -19,11 +23,12 @@ PositionPID_t AnglePID;
 PositionPID_t SpeedPID;
 #define anglePID AnglePID
 #define speedPID SpeedPID
-#elif
+#else
 static PositionPID_t anglePID;
+static PositionPID_t speedPID;
 #endif
 
-BipolarEncoder_t Encoder = { 0 };
+DoublePhaseEncoder_t Encoder = { 0 };
 
 static float pitch, roll, yaw;
 static short gx, gy, gz;
@@ -38,7 +43,7 @@ void PID_Init(void)
 	anglePID.integration = -1.83;
 	anglePID.differention = 0.05;
 
-	anglePID.setpoint = -2.3;
+	anglePID.setpoint = GetCarBalanceAngle();
 
 	anglePID.configs.autoResetIntegration = disable;
 	anglePID.configs.limitIntegration = enable;
@@ -70,28 +75,40 @@ void waitPID_Flag(void)
 	flag = 0;
 }
 
-void PIDHandler(void)
+void PID_Handler(void)
 {
 	MPU_DMP_GetEularAngle(&pitch, &roll, &yaw);  //pitch
 
 	MPU_GetGyroscope(&gx, &gy, &gz);   		     //gy
 
-	static LowPassFilter_t filter = {0, 0.25};
+	if(GetCarStatus() == Balanceable)
+	{
+		static LowPassFilter_t filter = {0, 0.25};
 
-	speed = LowPassFilterCalc(&filter, GetBipolarEncoderSpeed(&Encoder));
+		speed = LowPassFilterCalc(&filter, GetDoublePhaseEncoderSpeed(&Encoder));
 
-	speedPID_Out = PosPID_Calc(&speedPID, speed * 100.0);
+		speedPID_Out = PosPID_Calc(&speedPID, speed * 100.0);
 
-	anglePID_Out = PosPID_CalcWithCustDiff(&anglePID, pitch, gy);
+		anglePID_Out = PosPID_CalcWithCustDiff(&anglePID, pitch, gy);
 
-	SetLeftMotorPWM_Value(anglePID_Out + speedPID_Out);
-	SetRightMotorPWM_Value(anglePID_Out + speedPID_Out);
+		SetLeftMotorPWM_Value(anglePID_Out + speedPID_Out);
+		SetRightMotorPWM_Value(anglePID_Out + speedPID_Out);
+	} else {
+		SetLeftMotorPWM_Value(0);
+		SetRightMotorPWM_Value(0);
+	}
+
 	updatePID_Flag();
 }
 
-void ReportPID_Status(void)
+void BalanceStatusMonitorHandler(float *Pitch, float *Yaw, short *Gy)
 {
 	waitPID_Flag();
+	*Pitch = pitch;
+	*Yaw = yaw;
+	*Gy = gy;
 	float data[] = {pitch, anglePID.setpoint, speed, speedPID.proportion, anglePID_Out + speedPID_Out};
 	SendJustFloatFrame(data, 5);
 }
+
+#endif

@@ -16,11 +16,11 @@
 
 #include "Clock.h"
 
-#include "PIDRealize.h"
+#include "BalanceRealize.h"
 
 extern I2C_HandleTypeDef hi2c1;
 
-int App(void)
+void App(void)
 
 {
 	ClockInit();
@@ -38,14 +38,13 @@ int App(void)
 		ret = MPU_DMP_Init(&hi2c1, 100);
 	}
 
-	PID_Init();
+	printf("MPU OK\r\n");
+
+	BalanceMethodInit();
 	set_int_enable(1);
 
 	while(1)
 	{
-		ReportPID_Status();
-		SleepMillisecond(1);
+		BalanceStatusMonitor();
 	}
-
-	return 0;
 }

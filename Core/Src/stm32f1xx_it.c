@@ -24,10 +24,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Clock.h"
-#include "PIDRealize.h"
 #include "Debug.h"
 
 #include "Encoder.h"
+
+#include "BalanceRealize.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +48,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-extern BipolarEncoder_t Encoder;
+extern DoublePhaseEncoder_t Encoder;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -265,7 +266,7 @@ void EXTI9_5_IRQHandler(void)
   {
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_8);
     /* USER CODE BEGIN LL_EXTI_LINE_8 */
-    PIDHandler();
+    MPU6050_InterruptHandler();
     /* USER CODE END LL_EXTI_LINE_8 */
   }
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
@@ -307,11 +308,12 @@ void USART2_IRQHandler(void)
   /* USER CODE BEGIN USART2_IRQn 0 */
 	if(LL_USART_IsActiveFlag_RXNE(USART2))
 	{
+#ifdef DEBUG
 		uint8_t data = LL_USART_ReceiveData8(USART2);
 		LL_USART_ClearFlag_RXNE(USART2);
-
-#ifdef DEBUG
 		DebugHandler(data);
+#else
+		LL_USART_ClearFlag_RXNE(USART2);
 #endif
 	}
   /* USER CODE END USART2_IRQn 0 */
@@ -332,14 +334,14 @@ void EXTI15_10_IRQHandler(void)
   {
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
     /* USER CODE BEGIN LL_EXTI_LINE_13 */
-    BipolarEncoderChannel1_TriggerHandle(&Encoder);
+    DoublePhaseEncoderChannel1_TriggerHandle(&Encoder);
     /* USER CODE END LL_EXTI_LINE_13 */
   }
   if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
   {
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
     /* USER CODE BEGIN LL_EXTI_LINE_14 */
-    BipolarEncoderChannel2_TriggerHandle(&Encoder);
+    DoublePhaseEncoderChannel2_TriggerHandle(&Encoder);
     /* USER CODE END LL_EXTI_LINE_14 */
   }
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
