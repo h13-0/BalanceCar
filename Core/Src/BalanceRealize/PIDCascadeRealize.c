@@ -1,13 +1,12 @@
-
 /*
- * PIDRealize.c
+ * PIDCascadeRealize.c
  *
- *  Created on: 2021,7,2
+ *  Created on: 2021Äê7ÔÂ22ÈÕ
  *      Author: h13
  */
-#ifdef PIDParallel
 
-#include "PIDParallelRealize.h"
+#ifdef PIDCascade
+#include "PIDCascadeRealize.h"
 #include <stdlib.h>
 #include "BalanceRealize.h"
 #include "PID.h"
@@ -54,17 +53,17 @@ void PID_Init(void)
 	anglePID.maximumAbsValueOfIntegrationOutput = 500.0;
 	anglePID.maxAbsOutput = 725.0;
 
-	speedPID.proportion = -1.16;
-	speedPID.integration = -0.058;
-	speedPID.differention = 2.26;
+	speedPID.proportion = 0.08;
+	speedPID.integration = 0.0004;
+	speedPID.differention = 0.0;
 
 	speedPID.setpoint = 0.0;
 
 	speedPID.configs.autoResetIntegration = disable;
 	speedPID.configs.limitIntegration = enable;
 
-	speedPID.maximumAbsValueOfIntegrationOutput = 500.0;
-	speedPID.maxAbsOutput = 725.0;
+	speedPID.maximumAbsValueOfIntegrationOutput = 15.0;
+	speedPID.maxAbsOutput = 20.0;
 }
 
 void updatePID_Flag(void)
@@ -94,10 +93,12 @@ void PID_Handler(void)
 
 		speedPID_Out = PosPID_Calc(&speedPID, speed * 100.0);
 
+		anglePID.setpoint = GetCarBalanceAngle() + speedPID_Out;
+
 		anglePID_Out = PosPID_CalcWithCustDiff(&anglePID, pitch, gy);
 
-		SetLeftMotorPWM_Value(anglePID_Out + speedPID_Out);
-		SetRightMotorPWM_Value(anglePID_Out + speedPID_Out);
+		SetLeftMotorPWM_Value(anglePID_Out);
+		SetRightMotorPWM_Value(anglePID_Out);
 	} else {
 		anglePID._error = 0;
 		anglePID._sumError = 0;
@@ -119,4 +120,5 @@ void BalanceStatusMonitorHandler(float *Pitch, short *Az)
 	SendJustFloatFrame(data, 5);
 }
 
-#endif
+
+#endif /* PIDCascade */

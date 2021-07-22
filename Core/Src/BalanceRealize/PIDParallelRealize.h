@@ -4,6 +4,7 @@
  *  Created on: 2021,7,2,
  *      Author: h13
  */
+#ifdef PIDParallel
 
 #ifndef SRC_BALANCEREALIZE_PIDPARALLELREALIZE_H_
 #define SRC_BALANCEREALIZE_PIDPARALLELREALIZE_H_
@@ -15,3 +16,5 @@ void PID_Handler(void);
 void BalanceStatusMonitorHandler(float *Pitch, short *Ay);
 
 #endif /* SRC_BALANCEREALIZE_PIDPARALLELREALIZE_H_ */
+
+#endif /* PIDParallel */
