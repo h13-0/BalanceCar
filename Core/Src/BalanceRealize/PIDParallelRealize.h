@@ -12,6 +12,6 @@ void PID_Init(void);
 
 void PID_Handler(void);
 
-void BalanceStatusMonitorHandler(float *Pitch, float *Yaw, short *Gy);
+void BalanceStatusMonitorHandler(float *Pitch, short *Ay);
 
 #endif /* SRC_BALANCEREALIZE_PIDPARALLELREALIZE_H_ */

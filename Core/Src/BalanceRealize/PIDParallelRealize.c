@@ -30,12 +30,15 @@ static PositionPID_t speedPID;
 
 DoublePhaseEncoder_t Encoder = { 0 };
 
-static float pitch, roll, yaw;
-static short gx, gy, gz;
-static float anglePID_Out;
-static float speedPID_Out;
 static uint8_t flag = 0;
 static float speed = 0;
+
+static float pitch = 0, roll = 0, yaw = 0;
+static short gx = 0, gy = 0, gz = 0;
+static short ax = 0, ay = 0, az = 0;
+
+static float anglePID_Out = 0;
+static float speedPID_Out = 0;
 
 void PID_Init(void)
 {
@@ -81,6 +84,8 @@ void PID_Handler(void)
 
 	MPU_GetGyroscope(&gx, &gy, &gz);   		     //gy
 
+	MPU_GetAccelerometer(&ax, &ay, &az);
+
 	if(GetCarStatus() == Balanceable)
 	{
 		static LowPassFilter_t filter = {0, 0.25};
@@ -101,13 +106,12 @@ void PID_Handler(void)
 	updatePID_Flag();
 }
 
-void BalanceStatusMonitorHandler(float *Pitch, float *Yaw, short *Gy)
+void BalanceStatusMonitorHandler(float *Pitch, short *Az)
 {
 	waitPID_Flag();
 	*Pitch = pitch;
-	*Yaw = yaw;
-	*Gy = gy;
-	float data[] = {pitch, anglePID.setpoint, speed, speedPID.proportion, anglePID_Out + speedPID_Out};
+	*Az = az;
+	float data[] = {pitch, anglePID.setpoint, speed, az, anglePID_Out + speedPID_Out};
 	SendJustFloatFrame(data, 5);
 }
 
