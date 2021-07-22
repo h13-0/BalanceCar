@@ -6,9 +6,8 @@
  */
 #include "BalanceRealize.h"
 #include <stdlib.h>
+#include <stdint.h>
 #include "PIDParallelRealize.h"
-
-#include "JustFloat.h"
 
 static CarStatus_t carStatus = Balanceable;
 static float pitch = 0;

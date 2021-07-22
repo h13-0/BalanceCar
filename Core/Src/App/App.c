@@ -30,6 +30,8 @@ void App(void)
 	SetSerialPrintfTarget(USART2);
 	SetJustFloatPort(USART2);
 
+	printf("Start.\r\n");
+
 	MPU_Error_t ret = MPU_DMP_Init(&hi2c1, 100);
 	while(ret != MPU_OK)
 	{
