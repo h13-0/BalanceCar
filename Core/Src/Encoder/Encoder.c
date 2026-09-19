@@ -116,27 +116,25 @@ __attribute__((always_inline)) inline void DoublePhaseEncoderChannel2_TriggerHan
 	{
 		if(Encoder -> SymbolStatus.Symbol == Positive)
 		{
-			Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+			Encoder -> SymbolStatus.StableTime = 0;
 		} else {
-			if(Encoder -> SymbolStatus.StableTime > 0)
+			Encoder -> SymbolStatus.StableTime ++;
+			if(Encoder -> SymbolStatus.StableTime >= _symbolStableThreshold)
 			{
-				Encoder -> SymbolStatus.StableTime --;
-			} else {
 				Encoder -> SymbolStatus.Symbol = Positive;
-				Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+				Encoder -> SymbolStatus.StableTime = 0;
 			}
 		}
 	} else {
 		if(Encoder -> SymbolStatus.Symbol == Negative)
 		{
-			Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+			Encoder -> SymbolStatus.StableTime = 0;
 		} else {
-			if(Encoder -> SymbolStatus.StableTime > 0)
+			Encoder -> SymbolStatus.StableTime ++;
+			if(Encoder -> SymbolStatus.StableTime >= _symbolStableThreshold)
 			{
-				Encoder -> SymbolStatus.StableTime --;
-			} else {
 				Encoder -> SymbolStatus.Symbol = Negative;
-				Encoder -> SymbolStatus.StableTime = _symbolStableThreshold;
+				Encoder -> SymbolStatus.StableTime = 0;
 			}
 		}
 	}
